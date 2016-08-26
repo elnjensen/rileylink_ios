@@ -10,30 +10,34 @@ import Foundation
 import HealthKit
 
 public struct PredictedBG {
-    let values: [Double]
-    let cob: [Double]?
-    let iob: [Double]?
+    let startDate: NSDate
+    let values: [Int]
+    let cob: [Int]?
+    let iob: [Int]?
 
-    public init(values: [HKQuantity], cob: [HKQuantity]? = nil, iob: [HKQuantity]? = nil) {
+    public init(startDate: NSDate, values: [HKQuantity], cob: [HKQuantity]? = nil, iob: [HKQuantity]? =
+        nil) {
+        self.startDate = startDate
         // BG values in nightscout are in mg/dL.
         let unit = HKUnit.milligramsPerDeciliterUnit()
-        self.values = values.map { $0.doubleValueForUnit(unit) }
-        self.cob = cob?.map { $0.doubleValueForUnit(unit) }
-        self.iob = iob?.map { $0.doubleValueForUnit(unit) }
+        self.values = values.map { Int(round($0.doubleValueForUnit(unit))) }
+        self.cob = cob?.map { Int(round($0.doubleValueForUnit(unit))) }
+        self.iob = iob?.map { Int(round($0.doubleValueForUnit(unit))) }
     }
 
     public var dictionaryRepresentation: [String: AnyObject] {
 
         var rval = [String: AnyObject]()
 
+        rval["startDate"] =  TimeFormat.timestampStrFromDate(startDate)
         rval["values"] = values
 
         if let cob = cob {
-            rval["cob"] = cob
+            rval["COB"] = cob
         }
 
         if let iob = iob {
-            rval["iob"] = iob
+            rval["IOB"] = iob
         }
 
         return rval
