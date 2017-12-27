@@ -8,6 +8,8 @@
 
 #import <XCTest/XCTest.h>
 #import "RileyLinkBLEDevice.h"
+#import "RFPacket.h"
+#import "NSData+Conversion.h"
 
 @interface RileyLinkBLEDevice (_Private)
 
@@ -21,16 +23,6 @@
 
 @implementation RileyLinkBLEKitTests
 
-- (void)setUp {
-    [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
-}
-
-- (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-    [super tearDown];
-}
-
 - (void)testVersionParsing {
     id peripheral = nil;
     
@@ -40,5 +32,27 @@
     
     XCTAssertEqual(SubgRfspyVersionStateUpToDate, state);
 }
+
+- (void)testDecodeRF {
+    NSData *response = [NSData dataWithHexadecimalString:@"4926a965a5d1a8dab0e5635635555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555559a35"];
+    RFPacket *packet = [[RFPacket alloc] initWithRFSPYResponse:response];
+    XCTAssertEqualObjects(@"a7754838ce0303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", packet.data.hexadecimalString);
+}
+
+- (void)testEncodeData {
+    NSData *msg = [NSData dataWithHexadecimalString:@"a77548380600a2"];
+    RFPacket *packet = [[RFPacket alloc] initWithData:msg];
+    
+    XCTAssertEqualObjects(@"a965a5d1a8da566555ab2555", packet.encodedData.hexadecimalString);
+}
+
+- (void)testDecodeInvalidCRC {
+    // This data is corrupt in a special way; the data still decodes via tha 4b6b conversion without error,
+    // but produces a decoded message that doesn't match its CRC.
+    NSData *response = [NSData dataWithHexadecimalString:@"4926b165a5d1a8dab0e5635635555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555559a35"];
+    RFPacket *packet = [[RFPacket alloc] initWithRFSPYResponse:response];
+    XCTAssertNil(packet.data);
+}
+
 
 @end
