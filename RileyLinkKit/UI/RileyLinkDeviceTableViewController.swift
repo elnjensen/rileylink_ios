@@ -119,6 +119,16 @@ public class RileyLinkDeviceTableViewController: UITableViewController, TextFiel
         return decimalFormatter
     }()
 
+    private lazy var decimalSigFigFormatter: NumberFormatter = {
+        let decimalSigFigFormatter = NumberFormatter()
+        
+        decimalSigFigFormatter.numberStyle = .decimal
+        decimalSigFigFormatter.maximumSignificantDigits = 4
+        decimalSigFigFormatter.minimumSignificantDigits = 2
+
+        return decimalSigFigFormatter
+    }()
+    
     private lazy var successText = NSLocalizedString("Succeeded", comment: "A message indicating a command succeeded")
 
     // MARK: - Table view data source
@@ -154,6 +164,7 @@ public class RileyLinkDeviceTableViewController: UITableViewController, TextFiel
         case pressDownButton
         case readPumpStatus
         case readBasalSchedule
+        case readPumpSettings
     }
 
     public override func numberOfSections(in tableView: UITableView) -> Int {
@@ -297,6 +308,9 @@ public class RileyLinkDeviceTableViewController: UITableViewController, TextFiel
 
             case .readBasalSchedule:
                 cell.textLabel?.text = NSLocalizedString("Read Basal Schedule", comment: "The title of the command to read basal schedule")
+
+            case .readPumpSettings:
+                cell.textLabel?.text = NSLocalizedString("Read Pump Settings", comment: "The title of the command to read pump settings")
 }
         }
 
@@ -567,6 +581,27 @@ public class RileyLinkDeviceTableViewController: UITableViewController, TextFiel
                     
                     return NSLocalizedString("Reading basal schedule…", comment: "Progress message for reading basal schedule")
                 }
+
+            case .readPumpSettings:
+                vc = CommandResponseViewController {
+                    [unowned self] (completionHandler) -> String in
+                    self.device.ops?.readSettings { (result) in
+                        DispatchQueue.main.async {
+                            switch result {
+                            case .success(let status):
+                                var str = String(format: NSLocalizedString("Max basal: %1$@ U/hr\n", comment: "The format string describing max basal rate: (1: number of units per hour)"), self.decimalSigFigFormatter.string(from: NSNumber(value: status.maxBasal))!)
+                                str += String(format: NSLocalizedString("Max bolus: %1$@ U\n", comment: "The format string describing max bolus: (1: number of units)"), self.decimalSigFigFormatter.string(from: NSNumber(value: status.maxBolus))!)
+                                str += String(format: NSLocalizedString("Temp basal type: %1$@\n", comment: "The format string describing type of temp basal: (1: percent or absolute)"), status.tempBasalType)
+                                completionHandler(str)
+                            case .failure(let error):
+                                completionHandler(String(describing: error))
+                            }
+                        }
+                    }
+                    
+                    return NSLocalizedString("Reading pump settings…", comment: "Progress message for reading pump settings")
+                }
+            
             }
 
             if let cell = tableView.cellForRow(at: indexPath) {
