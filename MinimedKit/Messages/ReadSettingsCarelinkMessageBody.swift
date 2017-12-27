@@ -47,6 +47,8 @@ public class ReadSettingsCarelinkMessageBody: CarelinkLongMessageBody {
     public let insulinActionCurveHours: Int
 
     public let selectedBasalProfile: BasalProfile
+    
+    public let tempBasalType: String
 
     public required init?(rxData: Data) {
         guard rxData.count == type(of: self).length else {
@@ -73,6 +75,8 @@ public class ReadSettingsCarelinkMessageBody: CarelinkLongMessageBody {
 
         let rawInsulinActionCurveHours: UInt8 = rxData[18]
         insulinActionCurveHours = Int(rawInsulinActionCurveHours)
+        
+        tempBasalType = rxData[15] == 1 ? "Percent of basal" : "Absolute (Units/hr)"
 
         super.init(rxData: rxData)
     }
