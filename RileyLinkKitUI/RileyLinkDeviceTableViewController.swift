@@ -48,7 +48,7 @@ public class RileyLinkDeviceTableViewController: UITableViewController {
                 return
             }
 
-            cellForRow(.battery)?.setDetailBatteryLevel(battery)
+            cellForRow(.battery)?.setDetailBatteryLevel(battery, device.name)
         }
     }
     
@@ -310,8 +310,8 @@ public class RileyLinkDeviceTableViewController: UITableViewController {
                 cell.textLabel?.text = NSLocalizedString("Frequency", comment: "The title of the cell showing current rileylink frequency")
                 cell.setDetailFrequency(frequency, formatter: frequencyFormatter)
             case .battery:
-                cell.textLabel?.text = NSLocalizedString("Battery level", comment: "The title of the cell showing battery level")
-                cell.setDetailBatteryLevel(battery)
+                cell.textLabel?.text = NSLocalizedString("Battery Level", comment: "The title of the cell showing battery level")
+                cell.setDetailBatteryLevel(battery, device.name)
             }
         case .commands:
             cell.accessoryType = .disclosureIndicator
@@ -425,11 +425,12 @@ private extension UITableViewCell {
         }
     }
 
-    func setDetailBatteryLevel(_ batteryLevel: String?) {
-        if let unwrappedBatteryLevel = batteryLevel {
-            detailTextLabel?.text = unwrappedBatteryLevel + " %"
+   func setDetailBatteryLevel(_ batteryLevel: String?, _ name: String?) {
+        if let batteryLevel = batteryLevel, let name = name {
+            // 77 is the value reported by the RileyLink
+            detailTextLabel?.text = name.lowercased().contains("emalink") || batteryLevel != "77" ? batteryLevel + " %" : "N/A"
         } else {
-            detailTextLabel?.text = ""
+            detailTextLabel?.text = "N/A"
         }
     }
     
