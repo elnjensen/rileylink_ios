@@ -129,13 +129,9 @@ public class RileyLinkMinimedDeviceTableViewController: UITableViewController {
     }
 
     func updateBatteryLevel() {
-        device.runSession(withName: "Get battery level") { (session) in
-            do {
-                let batteryLevel = try self.device.getBatterylevel()
-                DispatchQueue.main.async {
+        device.getBatterylevel { (batteryLevel) in
+            DispatchQueue.main.async {
                     self.battery = batteryLevel
-                }
-            } catch {
             }
         }
     }
