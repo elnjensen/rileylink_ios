@@ -650,7 +650,19 @@ extension MinimedPumpManager {
             }
         }
     }
-    
+
+    /// Whether to use MySentry packets on capable pumps:
+    public var useMySentry: Bool {
+        get {
+            return state.useMySentry
+        }
+        set {
+            setState { (state) in
+                state.useMySentry = newValue
+            }
+        }
+    }
+
 }
 
 
