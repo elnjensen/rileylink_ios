@@ -10,24 +10,19 @@ import UIKit
 import CoreData
 import RileyLinkKit
 
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
+    private(set) lazy var deviceDataManager = DeviceDataManager()
+    
     var window: UIWindow?
     
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        let logFileURL = applicationDocumentsDirectory().appendingPathComponent("logfile.txt")
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
-        do {
-            try FileManager.default.removeItem(at: logFileURL)
-        } catch let error {
-            NSLog("Could not remove file at path: \(logFileURL): \(error)")
-        }
-        
-        // Just instantiate the DeviceDataManager
-        let delayTime = DispatchTime.now() + .seconds(1)
-        DispatchQueue.main.asyncAfter(deadline: delayTime) {
-            _ = DeviceDataManager.sharedManager
+        if let navController = self.window?.rootViewController as? UINavigationController {
+            let mainViewController = MainViewController(deviceDataManager: deviceDataManager)
+            navController.pushViewController(mainViewController, animated: false)
         }
         
         return true
@@ -60,48 +55,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NSLog(#function)
     }
     
-    // MARK: - Notifications
-    
-    func application(_ application: UIApplication, didReceive notification: UILocalNotification) {
-        
-    }
-    
-    func application(_ application: UIApplication, handleActionWithIdentifier identifier: String?, for notification: UILocalNotification, withResponseInfo responseInfo: [AnyHashable: Any], completionHandler: @escaping () -> Void) {
-        
-        completionHandler()
-    }
-    
     // MARK: - 3D Touch
     
     func application(_ application: UIApplication, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
         completionHandler(false)
-    }
-    
-    // MARK: - Core Data
-    
-    lazy var managedObjectContext: NSManagedObjectContext? = {
-        guard let managedObjectModel = { () -> NSManagedObjectModel? in
-            let modelURL = Bundle.main.url(forResource: "RileyLink", withExtension: "momd")!
-            return NSManagedObjectModel(contentsOf: modelURL)
-            }() else {
-                return nil
-        }
-        
-        guard let coordinator = { () -> NSPersistentStoreCoordinator? in
-            let storeURL = applicationDocumentsDirectory().appendingPathComponent("RileyLink.sqlite")
-            let coordinator = NSPersistentStoreCoordinator(managedObjectModel: managedObjectModel)
-            
-            try! coordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL, options: nil)
-            
-            return coordinator
-            }() else {
-                return nil
-        }
-        
-        let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-        context.persistentStoreCoordinator = coordinator
-        return context
-    }()
+    }    
 }
 
 

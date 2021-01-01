@@ -1,0 +1,2 @@
+github "LoopKit/LoopKit" ~> 3.0
+github "LoopKit/MKRingProgressView" "appex-safe"
