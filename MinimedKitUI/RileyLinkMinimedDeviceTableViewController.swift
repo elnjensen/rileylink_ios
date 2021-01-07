@@ -63,6 +63,16 @@ public class RileyLinkMinimedDeviceTableViewController: UITableViewController {
         }
     }
 
+    private var battery: String? {
+        didSet {
+            guard isViewLoaded else {
+                return
+            }
+
+            cellForRow(.battery)?.setDetailBatteryLevel(battery, device.name)
+        }
+    }
+
     private var lastIdle: Date? {
         didSet {
             guard isViewLoaded else {
@@ -115,6 +125,14 @@ public class RileyLinkMinimedDeviceTableViewController: UITableViewController {
                     self.uptime = statistics.uptime
                 }
             } catch { }
+        }
+    }
+
+    func updateBatteryLevel() {
+        device.getBatterylevel { (batteryLevel) in
+            DispatchQueue.main.async {
+                    self.battery = batteryLevel
+            }
         }
     }
 
@@ -185,6 +203,8 @@ public class RileyLinkMinimedDeviceTableViewController: UITableViewController {
         updateRSSI()
         
         updateUptime()
+
+        updateBatteryLevel()
     }
     
     public override func viewWillDisappear(_ animated: Bool) {
@@ -238,6 +258,7 @@ public class RileyLinkMinimedDeviceTableViewController: UITableViewController {
         case connection
         case uptime
         case idleStatus
+        case battery
     }
 
     private enum PumpRow: Int, CaseCountable {
@@ -321,6 +342,9 @@ public class RileyLinkMinimedDeviceTableViewController: UITableViewController {
             case .idleStatus:
                 cell.textLabel?.text = LocalizedString("On Idle", comment: "The title of the cell showing the last idle")
                 cell.setDetailDate(lastIdle, formatter: dateFormatter)
+            case .battery:
+                cell.textLabel?.text = NSLocalizedString("Battery Level", comment: "The title of the cell showing battery level")
+                cell.setDetailBatteryLevel(battery, device.name)
             }
         case .pump:
             switch PumpRow(rawValue: indexPath.row)! {
@@ -536,6 +560,15 @@ private extension UITableViewCell {
         }
     }
     
+   func setDetailBatteryLevel(_ batteryLevel: String?, _ name: String?) {
+        if let batteryLevel = batteryLevel, let name = name {
+            // 77 is the value reported by the RileyLink
+            detailTextLabel?.text = name.lowercased().contains("emalink") || batteryLevel != "77" ? batteryLevel + " %" : "N/A"
+        } else {
+            detailTextLabel?.text = "N/A"
+        }
+    }
+
     func setAwakeUntil(_ awakeUntil: Date?, formatter: DateFormatter) {
         switch awakeUntil {
         case let until? where until.timeIntervalSinceNow < 0:
